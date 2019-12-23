@@ -19,6 +19,14 @@ export default class Template extends Visualizer {
         beat:{
           value:0,
           max:4
+        },
+        bar:{
+          value:0,
+          max:8
+        },
+        section:{
+          value:0,
+          max:4
         }
       },
       image:0,
@@ -88,6 +96,12 @@ export default class Template extends Visualizer {
     })
 
     this.sync.on('bar', bar => {
+      this.state.sync.bar.value+=1;
+
+      // reset sync.bar.value at barSyncMax
+      if(this.state.sync.bar.value>this.state.sync.bar.max){
+        this.state.sync.bar.value = 1;
+      }
 
     })
 
@@ -107,6 +121,7 @@ export default class Template extends Visualizer {
     // Background
     const gradient = ctx.createLinearGradient(0,0,width+width/4,height+height/4);
     gradient.addColorStop(0,this.state.colours[0]);
+    gradient.addColorStop(1/this.state.sync.bar.max*(this.state.sync.bar.value),'red')
     gradient.addColorStop(1,this.state.colours[1]);
     ctx.fillStyle = gradient;
 
