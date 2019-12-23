@@ -9,26 +9,32 @@ export default class Template extends Visualizer {
     this.state={
       sync:{
         segment:{
+          paintFrame:0,
           value:0,
           max:16
         },
         tatum:{
+          paintFrame:0,
           value:0,
           max:8
         },
         beat:{
+          paintFrame:0,
           value:0,
           max:4
         },
         bar:{
+          paintFrame:0,
           value:0,
           max:8
         },
         section:{
+          paintFrame:0,
           value:0,
           max:4
         }
       },
+      paintFrame:0,
       image:0,
       backgroundImage: new Image(),
       grow:false,
@@ -43,21 +49,13 @@ export default class Template extends Visualizer {
   }
   hooks () {
     this.sync.on('tatum', tatum => {
-      this.state.sync.tatum.value++;
-      // reset sync.tatum at sync.tatumMax
-      if(this.state.sync.tatum.value>this.state.sync.tatum.max){
-        this.state.sync.tatum.value = 1;
-      }
+      this.incrementSync('tatum');
       this.state.grow = this.state.attackCurrent > 0.97*this.state.attackAverage;
-
     })
 
     this.sync.on('segment', segment => {
-      this.state.sync.segment.value++;
-      // reset sync.segment at sync.segmentMax
-      if(this.state.sync.segment.value>this.state.sync.segment.max){
-        this.state.sync.segment.value = 1;
-      }
+      this.incrementSync('segment');
+
       this.state.pointsAveraged++;
       this.state.attackCurrent = this.sync.segment.timbre[3];
       // only include positive values into average
@@ -78,13 +76,8 @@ export default class Template extends Visualizer {
   })
 
 
-    this.sync.on('beat', beat => {
-      this.state.sync.beat.value+=1;
-
-      // reset sync.beat.value at beatSyncMax
-      if(this.state.sync.beat.value>this.state.sync.beat.max){
-        this.state.sync.beat.value = 1;
-      }
+  this.sync.on('beat', beat => {
+    this.incrementSync('beat');
 
       // store volume to state
       this.state.volume = this.sync.volume;
@@ -96,16 +89,12 @@ export default class Template extends Visualizer {
     })
 
     this.sync.on('bar', bar => {
-      this.state.sync.bar.value+=1;
-
-      // reset sync.bar.value at barSyncMax
-      if(this.state.sync.bar.value>this.state.sync.bar.max){
-        this.state.sync.bar.value = 1;
-      }
+      this.incrementSync('bar');
 
     })
 
     this.sync.on('section', section => {
+      this.incrementSync('section');
       this.state.attackAverage = 0;
       this.state.attackSum = 0
       this.state.pointsAveraged = 0;
@@ -114,20 +103,58 @@ export default class Template extends Visualizer {
     })
   }
 
-  paint ({ ctx, height, width, now }) {
 
+  incrementSync = (syncIntervalName = 'segment') => {
+    // increments the value of the passed syncIntervalName in this.state.sync[syncIntervalName]
+    if(this.state.sync[syncIntervalName]){
+      let {paintFrame,value,max} = this.state.sync[syncIntervalName];
+      value+=1;
+      paintFrame = 0;
+      if(value>max){
+        value = 1;
+      }
+      this.state.sync[syncIntervalName].paintFrame = paintFrame;
+      this.state.sync[syncIntervalName].value = value;
+    }
+  }
+
+
+  incrementAllPaintFrames = () => {
+    const syncIntervalNames= ['segment','tatum', 'beat', 'bar', 'section'];
+    syncIntervalNames.forEach(element => {
+      this.incrementPaintFrame(element);
+    });
+  }
+  incrementPaintFrame = (syncIntervalName='segment') => {
+    // increments the value of the passed syncIntervalName in this.state.sync[syncIntervalName]
+    if(this.state.sync[syncIntervalName]){
+      let {paintFrame,value,max} = this.state.sync[syncIntervalName];
+      paintFrame+=0.005;
+      if(paintFrame>1/max){
+        paintFrame = 1/max;
+      }
+      this.state.sync[syncIntervalName].paintFrame = paintFrame;
+    }
+  }
+
+
+  paint ({ ctx, height, width, now }) {
+    this.incrementAllPaintFrames();
+    // clear canvas from previous paint
     ctx.clearRect(0, 0, width, height);
 
     // Background
     const gradient = ctx.createLinearGradient(0,0,width+width/4,height+height/4);
     gradient.addColorStop(0,this.state.colours[0]);
-    gradient.addColorStop(1/this.state.sync.bar.max*(this.state.sync.bar.value),'red')
+    // add intermediate color stop
+    gradient.addColorStop(Math.min(1,this.state.sync.bar.paintFrame+ 1/this.state.sync.bar.max*(this.state.sync.bar.value)),'red');
     gradient.addColorStop(1,this.state.colours[1]);
     ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
 
     // // photo background
     // const pattern = ctx.createPattern(this.state.backgroundImage, 'repeat');
-    ctx.fillRect(0, 0, width, height);
 
     // set range for fontSize
     const textSizeByVolume = interpolateNumber(44,100) ;
@@ -135,29 +162,20 @@ export default class Template extends Visualizer {
     ctx.font = '900 Arial'
     ctx.lineWidth= 2.2;
     ctx.textAlign ='center';
-    // ctx.strokeText(this.sync.state.currentlyPlaying.name, width/2,height/2);
-    // ctx.strokeText('VISIONS // 2020', width/2,height/2);
 
     ctx.fillStyle= 'white';
 
-    // ctx.strokeText(now,width/4,height/4);
     for(let i = 0; i<=5;i++){
       drawCenterEdgeRectangles(ctx, this.sync.segment.timbre[i]/95*(this.state.grow ? 1.1 : 0.6) * this.sync.volume, false, 'red', width/2, height/2, 30, width,height, i*40 );
 
     }
-    // ctx.strokeRect(0,height/2,30,textSizeByVolume(this.sync.volume));
-    // ctx.strokeRect(width,height/2,-30,-textSizeByVolume(this.sync.volume));
-    // ctx.strokeText('hello', this.state.beatSync,this.state.beatSync);
-    // ctx.strokeText(this.sync.state.currentlyPlaying.name, 0,this.state.beatSync);
-    // ctx.strokeText(this.sync.state.currentlyPlaying.artists[0].name, width/2,this.state.beatSync);
-    // ctx.strokeText(this.sync.state.currentlyPlaying.name, 3*width/4,this.state.beatSync);
-    // ctx.strokeText(this.sync.state.currentlyPlaying.name, width,this.state.beatSync);
+    ctx.strokeRect(width/2,height/2,-30,-textSizeByVolume(this.sync.volume));
 
     // repeated Text
     ctx.save();
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'black';
-    ctx.font = '92px Arial';
+    // ctx.font = '92px Arial';
 
     // Song Name
     ctx.textAlign = 'center'
