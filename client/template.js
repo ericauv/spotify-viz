@@ -1,6 +1,7 @@
 import Visualizer from './classes/visualizer'
 import {interpolateNumber} from 'd3-interpolate'
 import repeatTextVertically from './visualizations/repeatTextVertically'
+import repeatText from './visualizations/repeatText'
 import images from './images'
 export default class Template extends Visualizer {
   constructor () {
@@ -141,11 +142,15 @@ export default class Template extends Visualizer {
     ctx.save();
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'black';
-    ctx.font = '48px Arial';
+    ctx.font = '92px Arial';
+
+    // Song Name
     ctx.textAlign = 'center'
-    repeatTextVertically(ctx,'visions', 'stroke', width/2, height/2,50,false,this.state.sync.beat.value,300);
+    repeatTextVertically(ctx,this.sync.state.currentlyPlaying.name, 'stroke', width/2, height/2,50,false,this.state.sync.beat.value,2*width/3);
+
+    // Artist Name
     ctx.textAlign = 'left'
-    repeatTextVertically(ctx,'2020', 'stroke', width/9, height/9,50,false,this.state.sync.tatum.value,300);
+    repeatTextVertically(ctx,this.sync.state.currentlyPlaying.artists[0].name, 'stroke', width/9, height/9,50,false,this.state.sync.tatum.value,2*width/3);
     ctx.textAlign = 'right'
     for(let ninthCount=8;ninthCount>=1;ninthCount--){
       repeatedSyncTextAtNinthsOfWidth(ctx,width,height,'//','stroke',this.state.sync.beat.value);
@@ -170,6 +175,16 @@ const drawMultipleCenterEdgeRectangles = (numberOfRectangles) => {
 
 }
 
+const textAtCenteredThirds = (ctx,textContent='',fillOrStroke='fill',width=1000,height=1000) =>{
+  ctx.save();
+  ctx.textAlign = 'right'
+  ctx.textBaseline = 'bottom'
+  ctx.strokeText(textContent, width/3,height/3);
+  ctx.textAlign='left';
+  ctx.textBaseline='top';
+  ctx.strokeText(textContent, 2*width/3,2*height/3);
+  ctx.restore();
+}
 
 const drawCenterEdgeRectangles = (ctx, normalizedInput, fill=false, fillColour='white', maxWidth, maxHeight, otherRectangleDimension=30, canvasWidth, canvasHeight, offsetTowardsCenter=0) => {
   const rectHeight = interpolateNumber(0,maxHeight-otherRectangleDimension)(normalizedInput);
