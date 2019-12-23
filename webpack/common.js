@@ -30,7 +30,13 @@ module.exports = {
           'css-loader',
           'sass-loader'
         ]
-      }
+      },
+        {
+    test: /\.(png|svg|jpg|gif)$/,
+    use: [
+      'file-loader',
+    ],
+  },
     ]
   },
   optimization: {
@@ -60,8 +66,9 @@ module.exports = {
   resolve: {
     modules: [
       'node_modules',
-      'client'
+      'client',
+      'assets'
     ],
-    extensions: ['.js', '.css', '.scss', '.sass']
+    extensions: ['.js', '.css', '.scss', '.sass', '.gif', 'jpg']
   }
 }
