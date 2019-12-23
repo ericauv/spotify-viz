@@ -26,7 +26,7 @@ export default class Template extends Visualizer {
         bar:{
           paintFrame:0,
           value:0,
-          max:8
+          max:4
         },
         section:{
           paintFrame:0,
@@ -34,6 +34,7 @@ export default class Template extends Visualizer {
           max:4
         }
       },
+      randomSetsOfFour:[[0,0,0,0]],
       paintFrame:0,
       image:0,
       backgroundImage: new Image(),
@@ -55,7 +56,6 @@ export default class Template extends Visualizer {
 
     this.sync.on('segment', segment => {
       this.incrementSync('segment');
-
       this.state.pointsAveraged++;
       this.state.attackCurrent = this.sync.segment.timbre[3];
       // only include positive values into average
@@ -64,19 +64,20 @@ export default class Template extends Visualizer {
         this.state.attackAverage = (this.state.attackSum + this.state.attackCurrent)/this.state.pointsAveraged;
 
         //  set background image
-        // if(this.state.image === images.length-1){
-
-          //   this.state.image=0;
-          // }else{
-            //   this.state.image+=1;
-      // }
-      // this.state.backgroundImage.src = images[this.state.beatSyncmage]
+        if(this.state.image === images.length-1){
+            this.state.image=0;
+          }else{
+              this.state.image+=1;
+      }
+      this.state.backgroundImage.src = images[this.state.image];
 
     }
   })
 
 
   this.sync.on('beat', beat => {
+    this.generateRandomSetsOfFour();
+
     this.incrementSync('beat');
 
       // store volume to state
@@ -103,7 +104,15 @@ export default class Template extends Visualizer {
     })
   }
 
-
+  generateRandomSetsOfFour = () => {
+     // create random Sets of 4 numbers
+     for(let counter=0;counter<=200;counter++){
+      this.state.randomSetsOfFour[counter]=[];
+      for(let index=0;index<4;index++){
+        this.state.randomSetsOfFour[counter][index] = Math.random();
+      }
+    }
+  }
   incrementSync = (syncIntervalName = 'segment') => {
     // increments the value of the passed syncIntervalName in this.state.sync[syncIntervalName]
     if(this.state.sync[syncIntervalName]){
@@ -139,6 +148,9 @@ export default class Template extends Visualizer {
 
 
   paint ({ ctx, height, width, now }) {
+
+
+    // increment the paintFrame property in all state.sync objects
     this.incrementAllPaintFrames();
     // clear canvas from previous paint
     ctx.clearRect(0, 0, width, height);
@@ -147,14 +159,16 @@ export default class Template extends Visualizer {
     const gradient = ctx.createLinearGradient(0,0,width+width/4,height+height/4);
     gradient.addColorStop(0,this.state.colours[0]);
     // add intermediate color stop
-    gradient.addColorStop(Math.min(1,this.state.sync.bar.paintFrame+ 1/this.state.sync.bar.max*(this.state.sync.bar.value)),'red');
+    gradient.addColorStop(Math.min(1,this.state.sync.bar.paintFrame+ 1/this.state.sync.bar.max*(this.state.sync.bar.value-1)),'red');
     gradient.addColorStop(1,this.state.colours[1]);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
 
-    // // photo background
-    // const pattern = ctx.createPattern(this.state.backgroundImage, 'repeat');
+    // photo background
+    // ctx.drawImage(this.state.backgroundImage, width/27 * this.state.image, height/27*this.state.image, 300,300);
+    // ctx.drawImage(this.state.backgroundImage, width-width/27 * this.state.image, height-height/27*this.state.image, 300,300);
+    drawRandomImages(ctx,this.state.randomSetsOfFour,width,height,3,images);
 
     // set range for fontSize
     const textSizeByVolume = interpolateNumber(44,100) ;
@@ -179,14 +193,14 @@ export default class Template extends Visualizer {
 
     // Song Name
     ctx.textAlign = 'center'
-    repeatTextVertically(ctx,this.sync.state.currentlyPlaying.name, 'stroke', width/2, height/2,50,false,this.state.sync.beat.value,2*width/3);
+    repeatTextVertically(ctx,this.sync.state.currentlyPlaying.name, 'stroke', width/2, height/2,50,false,2,2*width/3);
 
     // Artist Name
     ctx.textAlign = 'left'
-    repeatTextVertically(ctx,this.sync.state.currentlyPlaying.artists[0].name, 'stroke', width/9, height/9,50,false,this.state.sync.tatum.value,2*width/3);
+    repeatTextVertically(ctx,this.sync.state.currentlyPlaying.artists[0].name, 'stroke', width/9, height/9,50,false,3,2*width/3);
     ctx.textAlign = 'right'
     for(let ninthCount=8;ninthCount>=1;ninthCount--){
-      repeatedSyncTextAtNinthsOfWidth(ctx,width,height,'//','stroke',this.state.sync.beat.value);
+      repeatedSyncTextAtNinthsOfWidth(ctx,width,height,'//','stroke',1);
 
     }
     ctx.restore();
@@ -206,6 +220,23 @@ const drawMultipleCenterEdgeRectangles = (numberOfRectangles) => {
 
   }
 
+}
+
+const drawRandomImages = (ctx, randomSetsOfFour=[[]], width=1000,height=1000, numberOfImages=1, images=[]) => {
+  const image = new Image();
+  const imageInstanceLimit = Math.min(numberOfImages-1, randomSetsOfFour.length-1)
+  for(let imageInstance = 0; imageInstance<imageInstanceLimit;imageInstance++){
+    // pick a random image from images to draw
+    image.src = images[Math.round(Math.random()*(images.length-1))];
+
+    const randomX = randomSetsOfFour[imageInstance][0] * width;
+    const randomY = randomSetsOfFour[imageInstance][1] * height;
+    const randomWidth = randomSetsOfFour[imageInstance][2] * width;
+    const randomHeight = randomSetsOfFour[imageInstance][3] * height;
+    // draw the image in a random position and size
+    ctx.drawImage(image,randomX,randomY,randomWidth,randomHeight);
+
+  }
 }
 
 const textAtCenteredThirds = (ctx,textContent='',fillOrStroke='fill',width=1000,height=1000) =>{
