@@ -10,31 +10,26 @@ export default class Template extends Visualizer {
       sync:{
         segment:{
           random:[],
-          paintFrame:0,
           value:0,
           max:16
         },
         tatum:{
           random:[],
-          paintFrame:0,
           value:0,
           max:8
         },
         beat:{
           random:[],
-          paintFrame:0,
           value:0,
           max:4
         },
         bar:{
           random:[],
-          paintFrame:0,
           value:0,
           max:4
         },
         section:{
           random:[],
-          paintFrame:0,
           value:0,
           max:4
         }
@@ -46,7 +41,6 @@ export default class Template extends Visualizer {
         spacing:40
       },
       randomSetsOfFour:[[0,0,0,0]],
-      paintFrame:0,
       image:0,
       backgroundImage: new Image(),
       grow:false,
@@ -129,13 +123,11 @@ export default class Template extends Visualizer {
   incrementSync = (syncIntervalName = 'segment') => {
     // increments the value of the passed syncIntervalName in this.state.sync[syncIntervalName]
     if(this.state.sync[syncIntervalName]){
-      let {paintFrame,value,max} = this.state.sync[syncIntervalName];
+      let {value,max} = this.state.sync[syncIntervalName];
       value+=1;
-      paintFrame = 0;
       if(value>max){
         value = 1;
       }
-      this.state.sync[syncIntervalName].paintFrame = paintFrame;
       this.state.sync[syncIntervalName].value = value;
     }
   }
@@ -144,7 +136,6 @@ export default class Template extends Visualizer {
   handleStateUpdateForSync = (syncIntervalName='segment') => {
     this.incrementSync(syncIntervalName);
     this.generateRandomNumberForSync(syncIntervalName);
-    this.incrementPaintFrameForSync(syncIntervalName);
   }
 
   generateRandomNumberForSync = (syncIntervalName='segment') => {
@@ -154,30 +145,11 @@ export default class Template extends Visualizer {
     this.state.sync[syncIntervalName].random[3] = Math.random();
   }
 
-  incrementAllPaintFramesForSync = () => {
-    const syncIntervalNames= ['segment','tatum', 'beat', 'bar', 'section'];
-    syncIntervalNames.forEach(element => {
-      this.incrementPaintFrameForSync(element);
-    });
-  }
-  incrementPaintFrameForSync = (syncIntervalName='segment') => {
-    // increments the value of the passed syncIntervalName in this.state.sync[syncIntervalName]
-    if(this.state.sync[syncIntervalName]){
-      let {paintFrame,value,max} = this.state.sync[syncIntervalName];
-      paintFrame+=0.005;
-      if(paintFrame>1/max){
-        paintFrame = 1/max;
-      }
-      this.state.sync[syncIntervalName].paintFrame = paintFrame;
-    }
-  }
 
 
   paint ({ ctx, height, width, now }) {
 
 
-    // increment the paintFrame property in all state.sync objects
-    this.incrementAllPaintFramesForSync();
     // clear canvas from previous paint
     ctx.clearRect(0, 0, width, height);
 
@@ -185,7 +157,7 @@ export default class Template extends Visualizer {
     const gradient = ctx.createLinearGradient(0,0,width+width/4,height+height/4);
     gradient.addColorStop(0,this.state.colours[0]);
     // add intermediate color stop
-    gradient.addColorStop(Math.min(1,this.state.sync.bar.paintFrame+ 1/this.state.sync.bar.max*(this.state.sync.bar.value-1)),'red');
+    gradient.addColorStop(Math.min(1,(1/this.state.sync.bar.max)*this.sync.bar.progress+ 1/this.state.sync.bar.max*(this.state.sync.bar.value-1)),'red');
     gradient.addColorStop(1,this.state.colours[1]);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
