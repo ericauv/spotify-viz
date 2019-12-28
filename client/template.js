@@ -170,6 +170,7 @@ export default class Template extends Visualizer {
 
     // random rectangles
     drawRandomRectangles(ctx,this.state.randomSetsOfFour,0,width,height,2,9);
+    // drawRandomRectangles(ctx,this.state.randomSetsOfFour,0,width,height,1,1);
 
     // set range for fontSize
     const textSizeByVolume = interpolateNumber(44,100) ;
@@ -244,8 +245,8 @@ const drawRandomImages = (ctx, randomSetsOfFour=[[]],randomSeedAddition, width=1
 }
 const drawRandomRectangles = (ctx, randomSetsOfFour=[[]],randomSeedAddition, width=1000,height=1000, numberOfRectangles=1, gridDivision=9) => {
   for(let rectangleCount = 0; rectangleCount<numberOfRectangles;rectangleCount++){
-    const randomX = Math.round(Math.round(randomSetsOfFour[rectangleCount+randomSeedAddition][0]*gridDivision)  * width/gridDivision);
-    const randomY = Math.round(Math.round(randomSetsOfFour[rectangleCount+randomSeedAddition][1]*gridDivision)  * height/gridDivision);
+    const randomX = Math.round(Math.min(width-width/gridDivision,Math.round(randomSetsOfFour[rectangleCount+randomSeedAddition][0]*gridDivision)  * width/gridDivision));
+    const randomY = Math.round(Math.min(height-height/gridDivision,Math.round(randomSetsOfFour[rectangleCount+randomSeedAddition][1]*gridDivision)  * height/gridDivision));
     const randomWidth = Math.round(Math.round(randomSetsOfFour[rectangleCount+randomSeedAddition][2]*gridDivision+1)  * width/gridDivision);
     const randomHeight = Math.round(Math.round(randomSetsOfFour[rectangleCount+randomSeedAddition][3]*gridDivision+1)  * height/gridDivision);
     ctx.save();
