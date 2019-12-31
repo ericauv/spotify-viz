@@ -3,7 +3,7 @@ import {interpolateNumber} from 'd3-interpolate'
 import {differenceInHours, differenceInMinutes, differenceInSeconds, differenceInMilliseconds,formatDistanceToNow, addMinutes, startOfMinute} from 'date-fns'
 import repeatTextVertically from './visualizations/repeatTextVertically'
 import repeatText from './visualizations/repeatText'
-import images from './images'
+// import images from './images'
 
 
 const newYear = new Date('January 1, 2020');
@@ -287,6 +287,9 @@ export default class Template extends Visualizer {
     }
     // Song and Artist
     if(!(Date.now() < newYearEndVisuals && Date.now() >= newYear)){
+      if(minutesLeft > 0 && minutesLeft%6=== 0){
+        drawRandomRectangles(ctx,this.state.sync.bar.randomSetsOfFour,0,width,height,Math.max(1,minutesLeft%4),9);
+      }
 
      ctx.save();
      ctx.textAlign = 'right';
